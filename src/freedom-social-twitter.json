@@ -1,0 +1,24 @@
+{
+  "name": "freedom-social-twitter",
+  "description": "Twitter social provider for freedom.js",
+  "app": {
+    "script": [
+      "twitter.js",
+      "freedom-social-twitter.js",
+      "twitter-auth.js"
+    ]
+  },
+  "default": "social",
+  "provides": [
+    "social"
+  ],
+  "permissions": [
+    "core.view"
+  ],
+  "views": {
+    "email-login": {
+      "main": "twitter-view.html",
+      "files": [ "twitter-view.js" ]
+    }
+  }
+}
