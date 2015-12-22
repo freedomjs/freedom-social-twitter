@@ -4,8 +4,10 @@ window.addEventListener('load', function () {
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var credentials = {
-      user: form.user.value,
-      password: form.password.value
+      consumer_key: form.consumer_key.value,
+      consumer_secret: form.consumer_secret.value,
+      access_token_key: form.access_token_key.value,
+      access_token_secret: form.access_token_secret.value
     };
     parent.postMessage({cmd: 'auth', message: credentials}, '*');
     return false;

@@ -19,6 +19,7 @@ var TwitterSocialProvider = function(dispatchEvent) {
   'use strict';
   this.dispatchEvent = dispatchEvent;
   this.credentials = null;
+  this.client = null;
 };
 
 
@@ -31,6 +32,7 @@ var TwitterSocialProvider = function(dispatchEvent) {
  **/
 TwitterSocialProvider.prototype.onCredentials = function(continuation, msg) {
   'use strict';
+  console.log(msg);
   if (msg.cmd && msg.cmd === 'auth') {
     this.credentials = msg.message;
     this.login(null, continuation);
@@ -42,7 +44,7 @@ TwitterSocialProvider.prototype.onCredentials = function(continuation, msg) {
   } else {
     continuation(undefined, {
       errcode: 'LOGIN_BADCREDENTIALS',
-      message: 'Bad credentials, could not log into Twitter'
+      message: 'Bad credentials, could not log in to Twitter'
     });
   }
 };
@@ -60,6 +62,30 @@ TwitterSocialProvider.prototype.login = function(loginOpts, continuation) {
     message: 'No login function defined'
   });
 };
+
+
+/**
+ * Private method to connect once login credentials are populated
+ * @method connect
+ * @private
+ */
+TwitterSocialProvider.prototype.connect = function(continuation) {
+  if (this.credentials) {
+    this.client = new twitter(
+      this.credentials.consumer_key,
+      this.credentials.consumer_secret,
+      this.credentials.access_token_key,
+      this.credentials.access_token_secret
+    );
+    continuation();
+  } else {
+    continuation(undefined, {
+      errcode: 'LOGIN_BADCREDENTIALS',
+      message: 'No credentials provided, could not log in to Twitter'
+    });
+  }
+};
+
 
 /**
  * Clear any credentials / state in the app.
