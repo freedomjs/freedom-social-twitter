@@ -32,7 +32,7 @@ module.exports = function(grunt) {
         },
         options: {
           browserifyOptions: {
-            standalone: 'twitter'
+            standalone: 'Twitter'
           }
         }
       }

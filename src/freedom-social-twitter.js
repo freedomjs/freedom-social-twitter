@@ -1,4 +1,4 @@
-/* globals window:true,freedom:true,BrowserBox,twitter,global */
+/* globals window:true,freedom:true,BrowserBox,Twitter,global */
 
 /**
  * Implementation of a Social provider for freedom.js that uses Twitter
@@ -71,7 +71,7 @@ TwitterSocialProvider.prototype.login = function(loginOpts, continuation) {
  */
 TwitterSocialProvider.prototype.connect = function(continuation) {
   if (this.credentials) {
-    this.client = new twitter(
+    this.client = new Twitter(
       this.credentials.consumer_key,
       this.credentials.consumer_secret,
       this.credentials.access_token_key,
@@ -126,24 +126,27 @@ TwitterSocialProvider.prototype.getUsers = function(continuation) {
 
 
 /**
- * TODO
- * Sends a message to a user on the network.
+ * Sends a message to a user via Twitter direct message.
  * If the destination is not specified or invalid, the mssage is dropped.
  * @method sendMessage
- * @param {String} to clientId of the device or user to send to.
- * @param {String} msg The message to send (first line used as subject)
+ * @param {String} to Twitter screenname of the user to send to.
+ * @param {String} msg The message to send
  * @param {Function} continuation Callback after message is sent.
  */
 TwitterSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   'use strict';
-  if (!this.smtp) {
-    console.warn('No client available to send message to ' + to);
+  if (!this.client) {
+    console.warn('No Twitter client available to send message to ' + to);
     continuation(undefined, {
       errcode: 'OFFLINE',
       message: this.ERRCODE.OFFLINE
     });
     return;
   }
+  this.client.post('direct_messages/new', {
+    screen_name: to,
+    text: msg
+  }, continuation);
 };
 
 
