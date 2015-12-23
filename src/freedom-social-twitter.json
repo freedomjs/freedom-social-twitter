@@ -3,7 +3,6 @@
   "description": "Twitter social provider for freedom.js",
   "app": {
     "script": [
-      "twitter.js",
       "freedom-social-twitter.js",
       "twitter-auth.js"
     ]
@@ -13,7 +12,9 @@
     "social"
   ],
   "permissions": [
-    "core.view"
+    "core.oauth",
+    "core.view",
+    "core.xhr"
   ],
   "views": {
     "twitter-login": {

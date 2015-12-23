@@ -1,4 +1,4 @@
-/* globals window:true,freedom:true,BrowserBox,Twitter,global */
+/* globals window:true,freedom:true,global */
 
 /**
  * Implementation of a Social provider for freedom.js that uses Twitter
@@ -15,11 +15,20 @@ if (typeof global !== 'undefined') {
   }
 }
 
+var BASE_URL = 'https://api.twitter.com/1.1';
+
 var TwitterSocialProvider = function(dispatchEvent) {
   'use strict';
   this.dispatchEvent = dispatchEvent;
+  this.xhr = null;
   this.credentials = null;
-  this.client = null;
+  this.request_options = {
+    headers: {
+      'Accept': '*/*',
+      'Connection': 'close',
+      'User-Agent': 'freedom-social-twitter/0.0.1'
+    }
+  };
 };
 
 
@@ -71,12 +80,8 @@ TwitterSocialProvider.prototype.login = function(loginOpts, continuation) {
  */
 TwitterSocialProvider.prototype.connect = function(continuation) {
   if (this.credentials) {
-    this.client = new Twitter(
-      this.credentials.consumer_key,
-      this.credentials.consumer_secret,
-      this.credentials.access_token_key,
-      this.credentials.access_token_secret
-    );
+    this.request_options[oauth] = this.credentials;
+    this.xhr = freedom['core.xhr']();
     continuation();
   } else {
     continuation(undefined, {
@@ -88,40 +93,41 @@ TwitterSocialProvider.prototype.connect = function(continuation) {
 
 
 /**
- * Clear any credentials / state in the app.
- * @method clearCachedCredentials
- */
+* Clear any credentials / state in the app.
+* @method clearCachedCredentials
+*/
 TwitterSocialProvider.prototype.clearCachedCredentials =
   function(continuation) {
     'use strict';
     this.credentials = null;
+    this.request_options[oauth] = null;
   };
 
 
 /**
- * TODO
- * Returns all the <client_state>s that we've seen so far (from any 'onClientState' event)
- * Note: this instance's own <client_state> will be somewhere in this list
- * Use the clientId returned from social.login() to extract your element
- *
- * @method getClients
- * @return {Object} {
- *    'clientId1': <client_state>,
- *    'clientId2': <client_state>,
- *     ...
- * } List of <client_state>s indexed by clientId
- *   On failure, rejects with an error code (see above)
- */
+* TODO
+* Returns all the <client_state>s that we've seen so far (from any 'onClientState' event)
+                          * Note: this instance's own <client_state> will be somewhere in this list
+* Use the clientId returned from social.login() to extract your element
+*
+* @method getClients
+* @return {Object} {
+*    'clientId1': <client_state>,
+*    'clientId2': <client_state>,
+*     ...
+* } List of <client_state>s indexed by clientId
+*   On failure, rejects with an error code (see above)
+*/
 TwitterSocialProvider.prototype.getClients = function(continuation) {
   'use strict';
-  continuation(this.vCardStore.getClients());
+  continuation();
 };
 
 
 // TODO
 TwitterSocialProvider.prototype.getUsers = function(continuation) {
   'use strict';
-  continuation(this.vCardStore.getUsers());
+  continuation();
 };
 
 
@@ -135,7 +141,7 @@ TwitterSocialProvider.prototype.getUsers = function(continuation) {
  */
 TwitterSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
   'use strict';
-  if (!this.client) {
+  if (!this.xhr) {
     console.warn('No Twitter client available to send message to ' + to);
     continuation(undefined, {
       errcode: 'OFFLINE',
@@ -152,14 +158,16 @@ TwitterSocialProvider.prototype.sendMessage = function(to, msg, continuation) {
 
 TwitterSocialProvider.prototype.logout = function(continuation) {
   'use strict';
+  this.xhr = null;
+  this.clearCachedCredentials(continuation);
 };
 
 
 /**
- * TODO
- * Handle messages from the Twitter client.
- * @method onMessage
- */
+* TODO
+* Handle messages from the Twitter client.
+* @method onMessage
+*/
 TwitterSocialProvider.prototype.onMessage = function(from, msg) {
   'use strict';
 };
