@@ -13,13 +13,6 @@
   ],
   "permissions": [
     "core.oauth",
-    "core.view",
     "core.xhr"
-  ],
-  "views": {
-    "twitter-login": {
-      "main": "twitter-view.html",
-      "files": [ "twitter-view.js" ]
-    }
-  }
+  ]
 }

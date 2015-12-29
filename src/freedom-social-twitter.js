@@ -41,7 +41,6 @@ var TwitterSocialProvider = function(dispatchEvent) {
  **/
 TwitterSocialProvider.prototype.onCredentials = function(continuation, msg) {
   'use strict';
-  console.log(msg);
   if (msg.cmd && msg.cmd === 'auth') {
     this.credentials = msg.message;
     this.login(null, continuation);
@@ -60,64 +59,96 @@ TwitterSocialProvider.prototype.onCredentials = function(continuation, msg) {
 
 
 /**
- * Begin the login view, potentially prompting for credentials.
- * This is expected to be overridden by a *-auth.js file
+ * Begin the login, potentially prompting for credentials.
+ * TODO finish once Twitter supports OAuth 2
  * @method login
  * @param {Object} loginOpts Setup information about the desired network.
  */
 TwitterSocialProvider.prototype.login = function(loginOpts, continuation) {
-  continuation(undefined, {
-    errcode: 'UNKNOWN',
-    message: 'No login function defined'
-  });
+  'use strict';
+  return new Promise(function(fulfillLogin, rejectLogin) {
+    var OAUTH_REDIRECT_URLS = [
+      "https://www.uproxy.org/oauth-redirect-uri",
+      "http://freedomjs.org/",
+      "http://localhost:8080/",
+      "https://fmdppkkepalnkeommjadgbhiohihdhii.chromiumapp.org/"
+    ];
+    var oauth = freedom['core.oauth']();
+
+    oauth.initiateOAuth(OAUTH_REDIRECT_URLS).then(function(stateObj) {
+      var url = '';  // TODO Twitter doesn't support OAuth 2 yet 
+      return oauth.launchAuthFlow(url, stateObj).then(function(responseUrl) {
+        return responseUrl.match(/code=([^&]+)/)[1];
+      });
+    }).then(function(code) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'PUT URL HERE WHEN TWITTER SUPPORTS OAUTH2' + code,
+               true);
+      xhr.onload = function() {
+        var text = xhr.responseText;
+        this.access_token = text.match(/access_token=([^&]+)/)[1];
+        xhr = new XMLHttpRequest();
+        xhr.open('GET', 'TODO URL WHEN OAUTH2' + this.access_token, true);
+        xhr.onload = function() {
+          var text = xhr.responseText;
+          var user = JSON.parse(text);
+          var clientId = Math.random().toString();
+          var clientState = {
+            userId: user.login,
+            clientId: clientId,
+            status: "ONLINE",
+            lastUpdated: Date.now(),
+            lastSeen: Date.now()
+          };
+
+          this.myClientState_ = clientState;
+          fulfillLogin(clientState);
+
+          var profile = {
+            userId: user.login,
+            name: user.name,
+            lastUpdated: Date.now(),
+            url: user.html_url,
+            imageData: user.avatar_url
+          };
+          this.addUserProfile_(profile);
+          this.finishLogin_();
+        }.bind(this);  // end of inner onload
+        xhr.send();
+      }.bind(this);  // end of outer onload
+      xhr.send();
+    }.bind(this));
+  }.bind(this));  // end of return new Promise
 };
 
 
 /**
- * Private method to connect once login credentials are populated
- * @method connect
- * @private
+ * Clear any credentials / state in the app.
+ * @method clearCachedCredentials
  */
-TwitterSocialProvider.prototype.connect = function(continuation) {
-  if (this.credentials) {
-    this.request_options[oauth] = this.credentials;
-    this.xhr = freedom['core.xhr']();
-    continuation();
-  } else {
-    continuation(undefined, {
-      errcode: 'LOGIN_BADCREDENTIALS',
-      message: 'No credentials provided, could not log in to Twitter'
-    });
-  }
-};
-
-
-/**
-* Clear any credentials / state in the app.
-* @method clearCachedCredentials
-*/
 TwitterSocialProvider.prototype.clearCachedCredentials =
   function(continuation) {
     'use strict';
     this.credentials = null;
-    this.request_options[oauth] = null;
+    this.request_options.oauth = null;
+    continuation();
   };
 
 
 /**
-* TODO
-* Returns all the <client_state>s that we've seen so far (from any 'onClientState' event)
-                          * Note: this instance's own <client_state> will be somewhere in this list
-* Use the clientId returned from social.login() to extract your element
-*
-* @method getClients
-* @return {Object} {
-*    'clientId1': <client_state>,
-*    'clientId2': <client_state>,
-*     ...
-* } List of <client_state>s indexed by clientId
-*   On failure, rejects with an error code (see above)
-*/
+ * TODO
+ * Returns all the <client_state>s that we've seen so far (from any 'onClientState' event)
+ * Note: this instance's own <client_state> will be somewhere in this list
+ * Use the clientId returned from social.login() to extract your element
+ *
+ * @method getClients
+ * @return {Object} {
+ *    'clientId1': <client_state>,
+ *    'clientId2': <client_state>,
+ *     ...
+ * } List of <client_state>s indexed by clientId
+ *   On failure, rejects with an error code (see above)
+ */
 TwitterSocialProvider.prototype.getClients = function(continuation) {
   'use strict';
   continuation();
@@ -164,10 +195,10 @@ TwitterSocialProvider.prototype.logout = function(continuation) {
 
 
 /**
-* TODO
-* Handle messages from the Twitter client.
-* @method onMessage
-*/
+ * TODO
+ * Handle messages from the Twitter client.
+ * @method onMessage
+ */
 TwitterSocialProvider.prototype.onMessage = function(from, msg) {
   'use strict';
 };

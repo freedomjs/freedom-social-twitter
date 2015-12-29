@@ -35,7 +35,7 @@ module.exports = function(grunt) {
     connect: {
       demo: {
         options: {
-          port: 8000,
+          port: 8080,
           keepalive: true,
           base: ['./', 'build/'],
           open: 'http://localhost:8000/build/demo/main.html'
